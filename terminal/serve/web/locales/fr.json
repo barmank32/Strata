@@ -101,6 +101,7 @@
   "file.notText": "Ce n’est pas un fichier texte",
   "file.notTextOnly": "{name} : joignez des fichiers texte (code, notes, journaux, données).",
   "file.notTextPictures": "{name} : joignez des fichiers texte (code, notes, journaux, données) ou des images.",
+  "file.notTextVideos": "{name}: attach text files (code, notes, logs, data), pictures or videos.",
   "file.pasted": "image collée",
   "file.pictureBig": "Image trop volumineuse",
   "file.pictureBigText": "{name} dépasse 20 Mo.",

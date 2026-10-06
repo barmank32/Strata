@@ -98,6 +98,7 @@
   "file.notText": "Keine Textdatei",
   "file.notTextOnly": "{name}: Hängen Sie Textdateien an (Code, Notizen, Protokolle, Daten).",
   "file.notTextPictures": "{name}: Hängen Sie Textdateien (Code, Notizen, Protokolle, Daten) oder Bilder an.",
+  "file.notTextVideos": "{name}: attach text files (code, notes, logs, data), pictures or videos.",
   "file.pasted": "eingefügtes Bild",
   "file.pictureBig": "Bild zu groß",
   "file.pictureBigText": "{name} ist größer als 20 MB.",

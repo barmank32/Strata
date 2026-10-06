@@ -29,6 +29,7 @@
   const THUMB_SIDE = 480, THUMB_QUALITY = 0.72, THUMB_MAX_CHARS = 200000, THUMB_WAIT_MS = 5000;
   const validThumb = (t) => typeof t === "string" && t.length <= THUMB_MAX_CHARS && /^data:image\/jpeg;base64,[A-Za-z0-9+/]+=*$/.test(t);
   const cleanMessages = (list) => list.map((m) => ({...m, images: (m.images || []).map((i) => (validThumb(i.thumb) ? {name: i.name, thumb: i.thumb} : {name: i.name})),
+                                                    videos: (m.videos || []).map((v) => ({name: v.name})),
                                                     files: (m.files || []).map((f) => ({name: f.name}))}));
   // The preview of a picture (long side THUMB_SIDE px, JPEG): null when the browser cannot decode or draw it, when the canvas has no
   // 2D context, when export throws or is blocked, when the result is too big, or after THUMB_WAIT_MS. It never rejects, and nothing

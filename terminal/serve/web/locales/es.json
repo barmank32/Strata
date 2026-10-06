@@ -98,6 +98,7 @@
   "file.notText": "No es un archivo de texto",
   "file.notTextOnly": "{name}: adjunta archivos de texto (código, notas, registros, datos).",
   "file.notTextPictures": "{name}: adjunta archivos de texto (código, notas, registros, datos) o imágenes.",
+  "file.notTextVideos": "{name}: attach text files (code, notes, logs, data), pictures or videos.",
   "file.pasted": "imagen pegada",
   "file.pictureBig": "Imagen demasiado grande",
   "file.pictureBigText": "{name} supera los 20 MB.",

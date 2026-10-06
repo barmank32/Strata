@@ -109,6 +109,7 @@
   "file.notText": "זה לא קובץ טקסט",
   "file.notTextOnly": "{name}: אפשר לצרף קובצי טקסט (קוד, הערות, יומנים, נתונים).",
   "file.notTextPictures": "{name}: אפשר לצרף קובצי טקסט (קוד, הערות, יומנים, נתונים) או תמונות.",
+  "file.notTextVideos": "{name}: attach text files (code, notes, logs, data), pictures or videos.",
   "file.pasted": "תמונה שהודבקה",
   "file.pictureBig": "התמונה גדולה מדי",
   "file.pictureBigText": "{name} גדול מ-20 MB.",

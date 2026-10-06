@@ -98,6 +98,7 @@
   "file.notText": "不是文本文件",
   "file.notTextOnly": "{name}: 请附加文本文件 (代码、笔记、日志、数据)。",
   "file.notTextPictures": "{name}: 请附加文本文件 (代码、笔记、日志、数据) 或图片。",
+  "file.notTextVideos": "{name}: attach text files (code, notes, logs, data), pictures or videos.",
   "file.pasted": "粘贴的图片",
   "file.pictureBig": "图片太大",
   "file.pictureBigText": "{name} 超过 20 MB。",

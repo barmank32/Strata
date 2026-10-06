@@ -98,6 +98,7 @@
   "file.notText": "텍스트 파일이 아닙니다",
   "file.notTextOnly": "{name}: 텍스트 파일(코드, 메모, 로그, 데이터)을 첨부하세요.",
   "file.notTextPictures": "{name}: 텍스트 파일(코드, 메모, 로그, 데이터) 또는 이미지를 첨부하세요.",
+  "file.notTextVideos": "{name}: attach text files (code, notes, logs, data), pictures or videos.",
   "file.pasted": "붙여넣은 이미지",
   "file.pictureBig": "이미지가 너무 큽니다",
   "file.pictureBigText": "{name}은(는) 20 MB를 넘습니다.",

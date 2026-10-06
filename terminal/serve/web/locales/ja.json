@@ -98,6 +98,7 @@
   "file.notText": "テキストファイルではありません",
   "file.notTextOnly": "{name}: テキストファイル (コード、メモ、ログ、データ) を添付してください。",
   "file.notTextPictures": "{name}: テキストファイル (コード、メモ、ログ、データ) または画像を添付してください。",
+  "file.notTextVideos": "{name}: attach text files (code, notes, logs, data), pictures or videos.",
   "file.pasted": "貼り付けた画像",
   "file.pictureBig": "画像が大きすぎます",
   "file.pictureBigText": "{name} は 20 MB を超えています。",

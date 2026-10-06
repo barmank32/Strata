@@ -120,6 +120,9 @@ function renderEmptyChat() {
 async function loadHealth() {
   try {
     health = await (await fetch("health")).json();
+    $("attach-btn").title = health.videos ? "Attach a text file, a picture or a video (or drop it here)"
+                          : health.images ? "Attach a text file or a picture (or drop it here)"
+                                          : "Attach a text file (or drop it here)";
     renderEmptyChat();
     $("tab-btn-images").hidden = !health.image_generation;
     if (location.hash === "#images" && health.image_generation) showTab("images");
@@ -1033,6 +1036,15 @@ function msgEl(m, i) {
       }
       el.appendChild(wrap);
     }
+    if (m.videos && m.videos.length) {
+      const wrap = document.createElement("div");
+      wrap.className = "msg-images";
+      for (const v of m.videos) {
+        if (v.url) { const vid = document.createElement("video"); vid.src = v.url; vid.controls = true; vid.preload = "metadata"; vid.title = v.name || "video"; wrap.appendChild(vid); }
+        else { const c = document.createElement("span"); c.className = "chip"; c.innerHTML = icon("video", "st-icon st-icon--sm"); c.append(v.name || "video"); wrap.appendChild(c); }
+      }
+      el.appendChild(wrap);
+    }
     const b = document.createElement("div");
     b.className = "st-bubble";
     b.textContent = m.text;
@@ -1265,9 +1277,11 @@ function apiMessages() {
   for (const m of messages) {
     if (m.role === "user") {
       const imgs = (m.images || []).filter((i) => i.url);
+      const vids = (m.videos || []).filter((v) => v.url);
       const text = userText(m);
-      out.push({role: "user", content: imgs.length ? [{type: "text", text},
-        ...imgs.map((i) => ({type: "image_url", image_url: {url: i.url}}))] : text});
+      out.push({role: "user", content: imgs.length || vids.length ? [{type: "text", text},
+        ...imgs.map((i) => ({type: "image_url", image_url: {url: i.url}})),
+        ...vids.map((v) => ({type: "video_url", video_url: {url: v.url}}))] : text});
     } else if (!(busy && busy.msg === m)) {            // the answer being asked for now is not history yet
       out.push(...assistantMessages(m));
     }
@@ -1399,13 +1413,14 @@ function settlePending(cut, finished) {
 // the message box (or a parked message, `payload`) becomes a user turn and a reply is asked for
 async function send(payload) {
   const own = !payload;
-  const p = payload || {text: $("input").value.trim(), images: attachments.filter((a) => a.kind !== "file"),
+  const p = payload || {text: $("input").value.trim(), images: attachments.filter((a) => a.kind === "image"),
+                        videos: attachments.filter((a) => a.kind === "video"),
                         files: attachments.filter((a) => a.kind === "file")};
-  if (!p.text && !p.images.length && !p.files.length) return;
+  if (!p.text && !p.images.length && !p.videos.length && !p.files.length) return;
   if (panel) return;                                  // something is open above (an edit): finish it first
   if (busy) { park(p, own); return; }
   clearUndo();
-  messages.push({role: "user", text: p.text, images: p.images, files: p.files, time: Date.now()});
+  messages.push({role: "user", text: p.text, images: p.images, videos: p.videos, files: p.files, time: Date.now()});
   if (own) {
     attachments = [];
     renderAttachments();
@@ -1577,6 +1592,9 @@ $("export-btn").onclick = () => {
 // pictures and text files: the attach button, dropping them on the chat, or pasting a picture (issue #30)
 const TEXT_EXT = /\.(txt|md|markdown|rst|tex|py|pyi|ipynb|js|mjs|cjs|ts|tsx|jsx|vue|svelte|json|jsonl|csv|tsv|log|ya?ml|toml|ini|cfg|conf|env|xml|html?|css|scss|less|c|cc|cpp|cxx|h|hh|hpp|cu|cuh|rs|go|java|kt|kts|swift|rb|php|pl|lua|r|jl|scala|sql|sh|bash|zsh|fish|ps1|psm1|bat|cmd|diff|patch|gradle|cmake|mk|dockerfile|gitignore|proto|graphql)$/i;
 const MAX_TEXT_FILE = 512 * 1024;
+// videos go to the server as a data: URL in a video_url part; ffmpeg reads them (strata-video)
+const VIDEO_EXT = /\.(mp4|m4v|webm|mov|mkv|avi|wmv|flv|mpe?g|3gp|ogv|ts)$/i;
+const MAX_VIDEO = 200e6;
 function isTextFile(f) {
   return f.type.startsWith("text/") || /json|xml|javascript|yaml|toml|x-sh|x-python/.test(f.type) ||
          TEXT_EXT.test(f.name) || /(^|[\\/])(makefile|dockerfile|readme|license)$/i.test(f.name);
@@ -1602,8 +1620,17 @@ function addFiles(files) {
       r.readAsDataURL(f);
       continue;
     }
-    if (!isTextFile(f)) { toast("warn", tr("file.notText", "Not a text file"), health.images ? tr("file.notTextPictures", "{name}: attach text files (code, notes, logs, data) or pictures.", {name: f.name})
-                                                              : tr("file.notTextOnly", "{name}: attach text files (code, notes, logs, data).", {name: f.name})); continue; }
+    if (f.type.startsWith("video/") || VIDEO_EXT.test(f.name)) {
+      if (!health.videos) { toast("warn", "Videos are off", health.images ? "This server's image encoder cannot read videos." : "This model was set up for text only."); continue; }
+      if (f.size > MAX_VIDEO) { toast("warn", "Video too large", `${f.name} is over 200 MB.`); continue; }
+      const r = new FileReader();
+      r.onload = () => { attachments.push({kind: "video", name: f.name || "video", url: r.result}); renderAttachments(); };
+      r.readAsDataURL(f);
+      continue;
+    }
+    if (!isTextFile(f)) { toast("warn", tr("file.notText", "Not a text file"), health.videos ? tr("file.notTextVideos", "{name}: attach text files (code, notes, logs, data), pictures or videos.", {name: f.name})
+                                            : health.images ? tr("file.notTextPictures", "{name}: attach text files (code, notes, logs, data) or pictures.", {name: f.name})
+                                                            : tr("file.notTextOnly", "{name}: attach text files (code, notes, logs, data).", {name: f.name})); continue; }
     if (f.size > MAX_TEXT_FILE) { toast("warn", tr("file.big", "File too large"), tr("file.bigText", "{name} is over 512 KB.", {name: f.name})); continue; }
     const r = new FileReader();
     r.onload = () => {
@@ -1632,7 +1659,7 @@ function renderAttachments() {
   attachments.forEach((a, i) => {
     const c = document.createElement("span");
     c.className = "chip";
-    c.innerHTML = icon(a.kind === "file" ? "attach" : "image", "st-icon st-icon--sm");
+    c.innerHTML = icon(a.kind === "file" ? "attach" : a.kind === "video" ? "video" : "image", "st-icon st-icon--sm");
     c.append(a.name);
     const x = document.createElement("button");
     x.type = "button"; x.className = "st-btn st-btn--icon"; x.setAttribute("aria-label", tr("file.remove", "Remove"));
