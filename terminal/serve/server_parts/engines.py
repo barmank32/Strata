@@ -1117,7 +1117,8 @@ def engine_arch_note(cfg: dict, cards: dict[int, int] | None = None, built: dict
 
 class ByteTokenizer:
     """Tiny stand-in tokenizer for tests without the pack: one id per UTF-8 byte, specials as ids >= 256."""
-    SPECIALS = ["<|im_start|>", "<|im_end|>", "<|endoftext|>", "<|vision_start|>", "<|image_pad|>", "<|vision_end|>"]
+    SPECIALS = ["<|im_start|>", "<|im_end|>", "<|endoftext|>", "<|vision_start|>", "<|image_pad|>", "<|vision_end|>",
+                "<|video_pad|>"]
 
     ALWAYS = ()                                     # specials matched without parse_special (type 4, as <think>)
 

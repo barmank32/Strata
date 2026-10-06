@@ -18,6 +18,20 @@ IM_END = "<|im_end|>"
 IMAGE_PAD = "<|image_pad|>"
 
 
+VIDEO_PAD = "<|video_pad|>"
+VISION_END = "<|vision_end|>"
+# a video's defaults (the vision entry's video_* keys override them): Qwen's 2 fps; frames sized to ~448 tokens per
+# frame pair (896x504 at 16:9: 18-28 px text stays readable; ~100 tokens lost it on a busy background); and a
+# whole-video budget, total_tokens 0 = automatic: context_share of the model's context, at most 224K (the
+# Qwen3.8-Flash-Next card's hour-scale setting), shared by the videos of one request.  A video longer than the budget
+# allows at 448 gets smaller frames, down to min_tokens per pair (Qwen3-VL's minimum), then a lower frame rate -
+# strata-vision plans it from the length.  max_frames 2,048 is the Qwen3-VL report's evaluation cap
+VIDEO_DEFAULTS = {"fps": 2.0, "max_frames": 2048, "max_side": 0, "tokens": 448, "total_tokens": 0,
+                  "min_tokens": 128, "context_share": 0.6}
+VIDEO_MAX_TOTAL = 229376                  # 224K video tokens
+VIDEO_FALLBACK_TOTAL = 12288              # the budget when the context is not known yet
+
+
 def rttime_limit_note() -> str:
     """#3238: Linux only. A hard RLIMIT_RTTIME that is not unlimited (PipeWire's client module sets it to 0 when rtkit is
     missing; every program started from that desktop inherits it) makes the kernel SIGKILL a process as soon as it
