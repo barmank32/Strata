@@ -421,6 +421,18 @@ def tuned_applies(backend: str | None, model_name: str | None, archs: Any = None
         return False
     if entry.where == "":
         return True
+    # OUR FORK (video-input, 2026-11-08): STRATA_DFLASH2_TUNED=1 runs the tuned pack on a card
+    # the entry's class does not list. It widens WHERE the measured default runs and nothing
+    # else: the tuned file is the same format and the same 339,694,592 bytes as the converted
+    # stock pack, so the engine, its VRAM figure and the confidence rule are unchanged, and a
+    # card without the verified bytes still takes the stock pack (pack_path asks tuned_ok).
+    # Unset, empty or 0 answers exactly as upstream. The stand this is for: one CUDA sm_70 card,
+    # --expert-cache auto, so slots_of() reads 11,869 - just under CONF_STEPS[0][0] - and
+    # upstream's "resident" entry would never take the pack here. Upstream measured the pack on
+    # the resident class ("+11.4% accepted drafts"); this cell is unmeasured, which is why it is
+    # opt-in and why the stand compares it against the stock pack before anything is decided.
+    if os.environ.get("STRATA_DFLASH2_TUNED", "").strip().lower() in ("1", "on", "yes", "true"):
+        return True
     arch = first_arch(archs)
     if entry.where == "gfx1151":
         return arch == "gfx1151"
