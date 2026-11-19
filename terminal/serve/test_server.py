@@ -24,7 +24,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from serve.frontend import ChatTemplate, literal_tags, mark_think_literals, unmark_think_literals  # noqa: E402
 from serve.server import (ANSWER_RESERVE_MIN, CTX_SLACK, ByteTokenizer, EngineDied, EngineNonFinite, GpuBusy, MockEngine,  # noqa: E402
                           PP_DONE_TAIL, Service,
-                          StrataEngine, api_key_of, engine_args, key_matches, layer_split_value, prompt_progress,
+                          StrataEngine, Vision, api_key_of, engine_args, key_matches, layer_split_value, prompt_progress,
                           prompt_tokens_seen,
                           request_stats, request_timings, serve, start_failure_hint)
 from types import SimpleNamespace  # noqa: E402
@@ -7470,3 +7470,31 @@ class ToolCallParameterCoercionAndDedup(unittest.TestCase):
             "</function>\n</tool_call>"
         )
         self.check(body, {})
+
+
+class VideosNeedAVideoReader(unittest.TestCase):
+    """Since 0.2.16 strata-vision's own picture reader answers only ENC, so a video request is refused with one
+    sentence and /health says videos are off, instead of a pipe error nobody can read."""
+
+    def setUp(self):
+        self.d = tempfile.TemporaryDirectory()
+        p = Path(self.d.name)
+        for name in ("reader", "mmproj.gguf", "model.gguf"):
+            (p / name).write_bytes(b"")
+        self.v = Vision({"exe": str(p / "reader"), "mmproj": str(p / "mmproj.gguf"), "model": str(p / "model.gguf")},
+                        lazy=True)
+
+    def test_the_own_reader_refuses_a_video(self):
+        self.v.reader = "own"
+        self.assertFalse(self.v.videos_ok)
+        with self.assertRaises(ValueError) as e:
+            self.v.encode_video(b"not a video")
+        self.assertIn("cannot read videos yet", str(e.exception))
+
+    def test_a_reader_that_answers_ENCV_still_tries(self):
+        self.v.reader = "mtmd"
+        self.assertTrue(self.v.videos_ok)
+
+    def test_a_reader_that_never_said_which_it_is_still_tries(self):
+        self.v.reader = None
+        self.assertTrue(self.v.videos_ok)

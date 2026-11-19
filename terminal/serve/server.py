@@ -3296,6 +3296,12 @@ class Vision:
                 raise ValueError("the vision encoder sent a bad video layout")
         return out
 
+    @property
+    def videos_ok(self) -> bool:
+        """Whether this reader can read a video at all.  Strata's own picture reader (0.2.16) has no video path yet:
+        it answers only ENC, so a video request is refused with this, not with a pipe error."""
+        return getattr(self, "reader", None) != "own"
+
     def video_options(self, opts: dict) -> dict:
         """The server's video defaults with a request's own fps / max_frames / max_side / tokens / total_tokens on
         top (checked); "budget" is the whole video's token budget: total_tokens, or automatic from the model's context
@@ -3322,6 +3328,8 @@ class Vision:
         the template's <|vision_start|><|video_pad|><|vision_end|>: text token ids (each pair's "<t seconds>" and its
         <|vision_start|> / <|vision_end|>) and image cell counts, in order.  `source`: what load() reads, or the
         video's bytes (an http(s) URL is downloaded before, outside the FIFO).  `keep` as for encode()."""
+        if not self.videos_ok:
+            raise ValueError("this picture reader cannot read videos yet (pictures still work)")
         data = source if isinstance(source, bytes) else self.load(source)
         o = self.video_options(opts or {})
         key = hashlib.sha256(data + json.dumps(o, sort_keys=True).encode()).hexdigest()[:32]
@@ -7017,7 +7025,7 @@ def make_handler(svc: Service):
             elif path in ("/health", "/api/health"):
                 self._json(200, {"status": "ok", "max_context": svc.reported_ctx(), "model": svc.model,
                                  "images": svc.vision is not None,
-                                 "videos": hasattr(svc.vision, "encode_video"), "api_key": bool(svc.api_key),
+                                 "videos": getattr(svc.vision, "videos_ok", False) and hasattr(svc.vision, "encode_video"), "api_key": bool(svc.api_key),
                                  "image_generation": svc.images is not None,
                                  "loaded": svc.loaded(), "service": "strata"})
             elif path.startswith("/v1/images/files/"):
